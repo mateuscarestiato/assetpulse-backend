@@ -1,3 +1,12 @@
+# Ambientes e Segredos
+.env
+.env.*
+!.env.example
+
+# Bancos de dados locais SQLite
+*.db
+*.sqlite3
+
 # Python
 __pycache__/
 *.py[cod]
@@ -21,20 +30,18 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Ambientes virtuais
 venv/
 .venv/
 ENV/
 
-# IDEs
+# IDEs e Editores
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Database (opcional - manter database.db caso queira versionar o seed inicial)
-# database.db
-
-# OS
+# Sistema Operacional
 .DS_Store
 Thumbs.db
+desktop.ini
