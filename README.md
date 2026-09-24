@@ -61,7 +61,8 @@ Siga os passos abaixo para configurar e executar a API localmente:
 
 ### 1. Clonar ou Acessar o Diretório do Projeto
 ```bash
-cd mvp-invest-api
+git clone https://github.com/mateuscarestiato/assetpulse-backend.git
+cd assetpulse-backend
 ```
 
 ### 2. Criar e Ativar um Ambiente Virtual (Recomendado)

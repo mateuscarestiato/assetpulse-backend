@@ -83,6 +83,66 @@ class TestAssetPulseAPI(unittest.TestCase):
         res = self.client.get("/openapi/swagger")
         self.assertIn(res.status_code, [200, 308, 302])
 
+    def test_05_validacao_duplicidade_ticker(self):
+        # Tentar cadastrar ticker já existente deve retornar 409 Conflict
+        payload = {
+            "codigo": "PETR4",
+            "nome": "Petrobras PN Repetida",
+            "categoria": "Ações",
+            "meta_alocacao": 10.0
+        }
+        res = self.client.post("/api/ativo", json=payload)
+        self.assertEqual(res.status_code, 409)
+        self.assertIn("Já existe um ativo cadastrado", res.get_json()["mensagem"])
+
+    def test_06_validacao_transacao_tipo_invalido(self):
+        # Transação com tipo não reconhecido deve retornar 400 Bad Request
+        payload = {
+            "ativo_id": 1,
+            "tipo": "TRANSFERENCIA_INVALIDA",
+            "quantidade": 10.0,
+            "preco_unitario": 20.0
+        }
+        res = self.client.post("/api/transacao", json=payload)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("Tipo de transação inválido", res.get_json()["mensagem"])
+
+    def test_07_busca_ativo_inexistente(self):
+        # Busca por ID inexistente deve retornar 404 Not Found
+        res = self.client.get("/api/ativo?id=999999")
+        self.assertEqual(res.status_code, 404)
+        self.assertIn("Ativo não encontrado", res.get_json()["mensagem"])
+
+    def test_08_integridade_delecao_em_cascata(self):
+        # Cria ativo temporário
+        res_a = self.client.post("/api/ativo", json={
+            "codigo": "TEMP3",
+            "nome": "Ativo Temporário Teste",
+            "categoria": "Ações",
+            "meta_alocacao": 5.0
+        })
+        self.assertEqual(res_a.status_code, 201)
+        temp_id = res_a.get_json()["id"]
+
+        # Cria transação vinculada a ele
+        res_t = self.client.post("/api/transacao", json={
+            "ativo_id": temp_id,
+            "tipo": "COMPRA",
+            "quantidade": 10.0,
+            "preco_unitario": 50.0
+        })
+        self.assertEqual(res_t.status_code, 201)
+
+        # Deleta o ativo
+        res_del = self.client.delete(f"/api/ativo?id={temp_id}")
+        self.assertEqual(res_del.status_code, 200)
+
+        # Verifica se as transações vinculadas foram expurgadas em cascata
+        res_check_t = self.client.get(f"/api/transacoes?ativo_id={temp_id}")
+        self.assertEqual(res_check_t.status_code, 200)
+        self.assertEqual(res_check_t.get_json()["total_itens"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
+
